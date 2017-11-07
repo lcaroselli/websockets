@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Socket.IO chat</title>
+    <title>Websockets</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
@@ -14,14 +14,60 @@
     </style>
   </head>
   <body>
-    <ul id="messages"></ul>
-    <form action="">
-      <input id="m" autocomplete="off" /><button>Send</button>
+    <article id="message-container"></article>
+
+    <p id="user-typing-text"></p>
+
+    <form>
+      <input id="message" /><button>Send Message</button>
     </form>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="/application.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+
+    <script>
+      $(() => {
+        const socket = io();
+        $('form').submit(() => {
+          socket.emit('message', $('#message').val());
+          $('#message').val('');
+          $('#user-typing-text').text('')
+          return false;
+        });
+
+        $('form').on('keydown', () => {
+          if ($('#message').val() !== '') {
+            socket.emit('typing');
+          } socket.emit('notTyping');
+        });
+
+        socket.on('message', (message) => {
+          $('#message-container').append(
+            $('<div>').text(message)
+          );
+        });
+
+        socket.on('connected', (message) => {
+          $('#message-container').append(
+            $('<div>').text(message.text)
+          );
+        });
+
+        socket.on('disconnected', (message) => {
+          $('#user-typing-text').append(
+            $('<div>').text(message.text)
+          );
+        });
+
+        socket.on('typing', () => {
+          $('#typing-notification').text('A user is typing')
+        });
+
+        socket.on('notTyping', () => {
+          $('#user-typing-text').text('')
+        });
+      });
+    </script>
 
   </body>
 </html>
